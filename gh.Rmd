@@ -1,0 +1,132 @@
+---
+title: "Explortion des données smartphones"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(ggplot2)
+library(dplyr)
+```
+
+## Objectif du document
+
+```{r include = FALSE}
+folderdata = "C:/Users/Bar Yokhai/Desktop/projets/Blog/smartphone/data/Phone/"
+```
+
+
+L'objectif du document est l'exploration des datasets "SMARTPHONES". Ces données proviennent de deux retailers : **Rue du Commerce** et **Amazon**. Le but étant de savoir si l'on peut aisément appliquer la méthode *Vincent Gigliobianco*. Méthode servant à extraire les différentes entités composant le label d'un produit. Les données se composent de quatre datasets provenant des deux retailers Amazon et Rue du commerce. Pour chacun des retailers, il existe un datset *properties* et un dataset *description*.
+
+```{r include = TRUE,echo=TRUE}
+rdsfiles = list.files(path = folderdata,pattern = "*.rds",full.names = T)
+amazon_description = readRDS(file = rdsfiles[1])
+amazon_property = readRDS(file = rdsfiles[2])
+rdc_description = readRDS(file = rdsfiles[3])
+rdc_property = readRDS(file = rdsfiles[4])
+```
+
+
+## Amazon
+
+#### Description Dataset
+
+Le dataset contient **`r nrow(amazon_description)`** lignes. Le dataset contient `r length(unique(amazon_description$id))` identifiants uniques.
+`r kable(head(amazon_description,2))`
+
+#### Properties Dataset, overview
+
+Le dataset contient **`r nrow(amazon_property)`** lignes. Le dataset contient **`r length(unique(amazon_property$id))`** identifiants uniques.
+`r kable(head(amazon_property))`  
+
+```{r include = FALSE}
+most_frequent_properties = as.data.frame(table(amazon_property$nameproperty))
+names(most_frequent_properties) = c("property","frequence")
+most_frequent_properties = most_frequent_properties[order(most_frequent_properties$frequence,decreasing = TRUE),]
+
+nb_properties_stats = amazon_property %>%
+  group_by(id) %>%
+  summarise(properties_count=n())
+
+nb_modalite_stats = amazon_property %>%
+  group_by(nameproperty) %>%
+  summarise(modalite_count=n_distinct(valueproperty))
+
+
+properties_stats = merge(x = most_frequent_properties,
+                         y = nb_modalite_stats,
+                         all.x = TRUE,
+                         by.x = "property",
+                         by.y = "nameproperty")
+
+properties_stats = properties_stats[order(properties_stats$frequence,decreasing = TRUE),]
+```
+
+
+#### Properties Dataset, details
+
+Le tableau ci-dessous représente la **fréquence** et le **nombre de modalités** des **propriétés** présentes dans le dataset. Le graphique ci-dessous représente la distribution du nombre de propriétés par produit. En moyenne un produit dispose d'une douzaine de propriétés
+
+`r kable(head(properties_stats,10))`  
+
+```{r fig.width=7, fig.height=4, echo = FALSE, message = FALSE}
+ggplot(nb_properties_stats, aes(properties_count)) +geom_histogram()
+```
+
+
+
+
+
+
+
+## Rue du Commerce
+
+#### Description Dataset
+
+Le dataset contient **`r nrow(rdc_description)`** lignes. Le dataset contient `r length(unique(rdc_description$id))` identifiants uniques.
+`r kable(head(rdc_description,2))`
+
+#### Properties Dataset, overview
+
+Le dataset contient **`r nrow(rdc_property)`** lignes. Le dataset contient **`r length(unique(rdc_property$id))`** identifiants uniques.
+`r kable(head(rdc_property))`  
+
+
+
+```{r include = FALSE}
+most_frequent_properties = as.data.frame(table(rdc_property$nameproperty))
+names(most_frequent_properties) = c("property","frequence")
+most_frequent_properties = most_frequent_properties[order(most_frequent_properties$frequence,decreasing = TRUE),]
+
+nb_properties_stats = rdc_property %>%
+  group_by(id) %>%
+  summarise(properties_count=n())
+
+nb_modalite_stats = rdc_property %>%
+  group_by(nameproperty) %>%
+  summarise(modalite_count=n_distinct(valueproperty))
+
+
+properties_stats = merge(x = most_frequent_properties,
+                         y = nb_modalite_stats,
+                         all.x = TRUE,
+                         by.x = "property",
+                         by.y = "nameproperty")
+
+properties_stats = properties_stats[order(properties_stats$frequence,decreasing = TRUE),]
+```
+
+
+
+#### Properties Dataset, details
+
+Le tableau ci-dessous représente la **fréquence** et le **nombre de modalités** des **propriétés** présentes dans le dataset. Le graphique ci-dessous représente la distribution du nombre de propriétés par produit. En moyenne un produit dispose de 18 propriétés
+
+`r kable(head(properties_stats,10))`  
+
+```{r fig.width=7, fig.height=4, echo = FALSE, message = FALSE}
+ggplot(nb_properties_stats, aes(properties_count)) +geom_histogram()
+```
+
+
